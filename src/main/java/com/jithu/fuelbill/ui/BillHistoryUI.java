@@ -32,6 +32,8 @@ public class BillHistoryUI extends JFrame {
                 }
             };
 
+    private final JTextField searchField = new JTextField(20);
+
     public BillHistoryUI() {
 
         setTitle("Fuel Bill History");
@@ -39,27 +41,53 @@ public class BillHistoryUI extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Table
         JTable table = new JTable(model);
         table.setRowHeight(25);
         table.setAutoCreateRowSorter(true);
 
         JScrollPane scrollPane = new JScrollPane(table);
 
+        // Buttons
+        JButton searchButton = new JButton("Search");
         JButton refreshButton = new JButton("Refresh");
 
-        refreshButton.addActionListener(e -> loadBills());
+        // Search button action
+        searchButton.addActionListener(e ->
+                searchBills(searchField.getText())
+        );
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // Press Enter to search
+        searchField.addActionListener(e ->
+                searchBills(searchField.getText())
+        );
+
+        // Refresh button action
+        refreshButton.addActionListener(e -> {
+            searchField.setText("");
+            loadBills();
+        });
+
+        // Top panel
+        JPanel topPanel =
+                new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        topPanel.add(new JLabel("Bill No / Customer:"));
+        topPanel.add(searchField);
+        topPanel.add(searchButton);
         topPanel.add(refreshButton);
 
+        // Add components to frame
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
+        // Load all bills when opening the window
         loadBills();
 
         setVisible(true);
     }
 
+    // Load all bills
     private void loadBills() {
 
         try {
@@ -77,6 +105,46 @@ public class BillHistoryUI extends JFrame {
             JOptionPane.showMessageDialog(
                     this,
                     "Unable to load bill history.\n"
+                            + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    // Search bills by bill number or customer name
+    private void searchBills(String keyword) {
+
+        if (keyword.trim().isEmpty()) {
+            loadBills();
+            return;
+        }
+
+        try {
+
+            List<Object[]> bills =
+                    billService.searchBills(keyword);
+
+            model.setRowCount(0);
+
+            for (Object[] bill : bills) {
+                model.addRow(bill);
+            }
+
+            if (bills.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No matching bills found.",
+                        "Search Results",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
+        } catch (SQLException ex) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Unable to search bills:\n"
                             + ex.getMessage(),
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE
