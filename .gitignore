@@ -1,0 +1,9 @@
+# Compiled Java files
+out/
+target/
+
+# VS Code settings (optional)
+.vscode/
+
+# Secrets and local environment files
+.env
