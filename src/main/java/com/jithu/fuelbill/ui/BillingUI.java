@@ -65,30 +65,41 @@ public class BillingUI extends JFrame {
         addRow(panel, gbc, 4, "Price per Litre (₹):", priceField);
         addRow(panel, gbc, 5, "Quantity (Litres):", quantityField);
         addRow(panel, gbc, 6, "Payment Method:", paymentBox);
+JButton calculateButton = new JButton("Calculate Total");
+JButton generateButton = new JButton("Generate Bill");
+JButton historyButton = new JButton("View Bill History");
 
-        JButton calculateButton = new JButton("Calculate Total");
-        JButton generateButton = new JButton("Generate Bill");
+// Calculate button
+gbc.gridx = 0;
+gbc.gridy = 7;
+panel.add(calculateButton, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 7;
-        panel.add(calculateButton, gbc);
+// Generate button
+gbc.gridx = 1;
+gbc.gridy = 7;
+panel.add(generateButton, gbc);
 
-        gbc.gridx = 1;
-        panel.add(generateButton, gbc);
+// Bill History button
+gbc.gridx = 0;
+gbc.gridy = 8;
+gbc.gridwidth = 2;
+panel.add(historyButton, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 8;
-        gbc.gridwidth = 2;
+// Total label
+gbc.gridx = 0;
+gbc.gridy = 9;
+gbc.gridwidth = 2;
 
-        totalLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        totalLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        panel.add(totalLabel, gbc);
+totalLabel.setFont(new Font("Arial", Font.BOLD, 18));
+totalLabel.setHorizontalAlignment(SwingConstants.CENTER);
+panel.add(totalLabel, gbc);
 
         add(panel);
+fuelBox.addActionListener(e -> loadFuelPrice());
+calculateButton.addActionListener(e -> calculateTotal());
+generateButton.addActionListener(e -> generateBill());
 
-        fuelBox.addActionListener(e -> loadFuelPrice());
-        calculateButton.addActionListener(e -> calculateTotal());
-        generateButton.addActionListener(e -> generateBill());
+historyButton.addActionListener(e -> new BillHistoryUI());
     }
 
     private void addRow(
@@ -190,7 +201,26 @@ public class BillingUI extends JFrame {
                     DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm a");
 
             String dateTime = now.format(formatter);
-
+try {
+    billService.saveBill(
+            billNumber,
+            customer,
+            vehicle,
+            fuel,
+            price,
+            quantity,
+            total,
+            payment
+    );
+} catch (SQLException ex) {
+    JOptionPane.showMessageDialog(
+            this,
+            "Failed to save bill:\n" + ex.getMessage(),
+            "Database Error",
+            JOptionPane.ERROR_MESSAGE
+    );
+    return;
+}
             String bill = """
                     ====================================
                           FUEL BILL
